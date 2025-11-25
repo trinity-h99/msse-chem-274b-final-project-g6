@@ -25,5 +25,20 @@ class BankingSystemImpl(BankingSystem):
 
 
     def transfer(self, timestamp: int, source_account_id: str, target_account_id: str, amount: int) -> int | None:
-        # TODO
-        pass
+        # TODO (Priscilla)
+        #Checking if both accounts exist
+        if source_account_id not in self.account or target_account_id not in self.accounts:
+            return None
+        #Cant transfer  to the same account
+        if source_account_id == target_account_id:
+            return None
+        #Cant transfer if there is insuffcient funds
+        if self.accounts[source_account_id] < amount:
+            return None
+        # Performing the transfer
+        self.accounts[source_account_id] -= amount
+        self.accounts[target_account_id] += amount
+
+        #Return the new balance of the source account
+        return self.accounts[source_account_id]
+        
