@@ -12,8 +12,14 @@ class BankingSystemImpl(BankingSystem):
     # TODO: implement interface methods here
 
     def create_account(self, timestamp: int, account_id: str) -> bool:
-        # TODO
-        pass
+        # TODO (TH)
+        if account_id in self.accounts_dict:
+            return False # Return False if account exists
+        
+        # Create new account, add timestamp and account balance as nested dict of account_id
+        self.accounts_dict[account_id] = {"time": timestamp, "account balance": 0}
+
+        return True
 
 
     def deposit(self, timestamp: int, account_id: str, amount: int) -> int | None:
