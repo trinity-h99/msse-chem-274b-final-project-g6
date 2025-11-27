@@ -7,6 +7,7 @@ class BankingSystemImpl(BankingSystem):
         # TODO: implement
         #pass
         self.accounts_dict = {}
+        self.outgoing = {} # added for level2
 
 
     # TODO: implement interface methods here
@@ -48,3 +49,5 @@ class BankingSystemImpl(BankingSystem):
         #Return the new balance of the source account
         return self.accounts_dict[source_account_id]["account balance"]
         
+    def top_spenders(self, timestamp: int, limit: int) -> list[str]:
+        pass
