@@ -46,8 +46,62 @@ class BankingSystemImpl(BankingSystem):
         self.accounts_dict[source_account_id]["account balance"] -= amount
         self.accounts_dict[target_account_id]["account balance"] += amount
 
+        #######
+        #Level2
+        # accrue the "outgoing" from the spending from the source account
+        current_outgoing = self.outgoing.get(source_account_id, 0)
+        self.outgoing[source_account_id] = current_outgoing + amount
+        ######
+
         #Return the new balance of the source account
         return self.accounts_dict[source_account_id]["account balance"]
         
-    def top_spenders(self, timestamp: int, limit: int) -> list[str]:
-        pass
+    def top_spenders(self, timestamp: int, n: int) -> list[str]:
+        """
+        LEVEL2
+        Get top n accounts that spent the most money.
+        
+        Sort accounts by how much they spent (most first).
+        If two accounts spent the same, sort by account name (A to Z).
+        Use bubble sort to do the sorting.
+        
+        Algorithm source:
+        - Bubble Sort: GeeksforGeeks. "Python Program for Bubble Sort."
+          https://www.geeksforgeeks.org/python-program-for-bubble-sort/
+        
+        Args:
+            timestamp: Current timestamp (not used in Level 2 yet)
+            n: Number of top spenders to return
+            
+        Returns:
+            List of strings for result
+        """
+        # make list of all accounts and how much they spent
+        account_outgoing_list = []
+        for account_id in self.accounts_dict.keys():
+            outgoing_amount = self.outgoing.get(account_id, 0)
+            account_outgoing_list.append((account_id, outgoing_amount))
+        
+        # sort using bubble sort
+        # compare two accounts next to each other and swap if needed
+        for i in range(len(account_outgoing_list)):
+            for j in range(len(account_outgoing_list) - 1):
+                # check if first account spent less than second account
+                if account_outgoing_list[j][1] < account_outgoing_list[j + 1][1]:
+                    # swap them
+                    account_outgoing_list[j], account_outgoing_list[j + 1] = account_outgoing_list[j + 1], account_outgoing_list[j]
+                elif account_outgoing_list[j][1] == account_outgoing_list[j + 1][1]:
+                    # if they spent same amount, check account names
+                    if account_outgoing_list[j][0] > account_outgoing_list[j + 1][0]:
+                        # swap them
+                        account_outgoing_list[j], account_outgoing_list[j + 1] = account_outgoing_list[j + 1], account_outgoing_list[j]
+        
+        # get first n accounts from sorted list
+        top_n = account_outgoing_list[:n]
+        
+        # result
+        result = []
+        for account_id, amount in top_n:
+            result.append(f"{account_id}({amount})")
+        
+        return result
