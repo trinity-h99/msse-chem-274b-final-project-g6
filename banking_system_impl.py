@@ -8,6 +8,9 @@ class BankingSystemImpl(BankingSystem):
         #pass
         self.accounts_dict = {}
         self.outgoing = {} # added for level2
+        self.cashbacks = {} # added for level3 pay method
+        self.withdrawals = 0 # added for level3 pay method
+        self.payments = {} # added for level3 pay method
 
 
     # TODO: implement interface methods here
@@ -105,3 +108,46 @@ class BankingSystemImpl(BankingSystem):
             result.append(f"{account_id}({amount})")
         
         return result
+    
+
+
+    def pay(self, timestamp: int, account_id: str, amount: int) -> str | None:
+
+        # Return cashbacks first from previous withdrawal
+        if timestamp in self.cashbacks:
+            for record in self.cashbacks[timestamp]:
+                account = record["account_id"]
+                self.accounts_dict[account]["account balance"] += record["cashback"]
+            del self.cashbacks[timestamp] # remove action after completion
+
+        # Returns None if account_id doesn't exist
+        if account_id not in self.accounts_dict:
+            return None
+        
+        # Returns None if account_id has insufficient funds to perform payment
+        if self.accounts_dict[account_id]["account balance"] < amount:
+            return None
+        
+        # Withdraw money
+        self.accounts_dict[account_id]["account balance"] -= amount
+
+        # Keep track in outgoing for top_spenders accounting for the total amount of money withdrawn from accounts
+        if account_id not in self.outgoing:
+            self.outgoing[account_id] = 0
+        self.outgoing[account_id] += amount
+
+        # Track payment and assign payment number
+        self.withdrawals += 1
+        payment = "payment" + str(self.withdrawals)
+
+        # Calculate cashback for current payment (2% round down)
+        cashback = amount * 2 // 100
+        cashback_timestamp = timestamp + 86400000
+
+        # Reserve for when cashback time comes
+        if cashback_timestamp not in self.cashbacks:
+            self.cashbacks[cashback_timestamp] = []
+        self.cashbacks[cashback_timestamp].append({"account_id": account_id, "cashback": cashback, "payment_num": payment})
+
+        return payment
+
