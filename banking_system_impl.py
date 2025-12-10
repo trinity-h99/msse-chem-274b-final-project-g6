@@ -8,23 +8,18 @@ class BankingSystemImpl(BankingSystem):
         #pass
         self.accounts_dict = {}
         self.outgoing = {} # added for level2
-        self.cashbacks = {} # added for level3 pay method
         self.withdrawals = 0 # added for level3 pay method
         self.payments = {} # added for level3 pay method
         self.payment_counter = 1  # added for level 3 to generate payment1, payment2
     
     # Level 3
     def _process_cashback(self, timestamp: int):
-        """
-        Internal helper method to check all scheduled payments for cashback refund.
-        """
         for account_id in self.payments:
-            for payment in self.payments[account_id]:
-                if not payment["refunded"] and timestamp >= payment["scheduled_time"]:
-                    self.accounts_dict[account_id]["account balance"] += payment["cashback"]
-                    payment["refunded"] = True
+            for payment_id, record in self.payments[account_id].items():
+                if not record["refunded"] and timestamp >= record["cashback_timestamp"]:
+                    self.accounts_dict[account_id]["account balance"] += record["cashback"]
+                    record["refunded"] = True
 
-    # TODO: implement interface methods here
 
     def create_account(self, timestamp: int, account_id: str) -> bool:
         # TODO (TH)
@@ -39,6 +34,7 @@ class BankingSystemImpl(BankingSystem):
 
     def deposit(self, timestamp: int, account_id: str, amount: int) -> int | None:
         # TODO (DK)
+        self._process_cashback(timestamp)
         if account_id not in self.accounts_dict:
             return None  # Return None if there is no account_id
         self.accounts_dict[account_id]["account balance"] += amount 
@@ -47,6 +43,7 @@ class BankingSystemImpl(BankingSystem):
 
     def transfer(self, timestamp: int, source_account_id: str, target_account_id: str, amount: int) -> int | None:
         # TODO (Priscilla)
+        self._process_cashback(timestamp)
         #Checking if both accounts exist
         if source_account_id not in self.accounts_dict or target_account_id not in self.accounts_dict:
             return None
@@ -125,11 +122,7 @@ class BankingSystemImpl(BankingSystem):
     def pay(self, timestamp: int, account_id: str, amount: int) -> str | None:
 
         # Return cashbacks first from previous withdrawal
-        if timestamp in self.cashbacks:
-            for record in self.cashbacks[timestamp]:
-                account = record["account_id"]
-                self.accounts_dict[account]["account balance"] += record["cashback"]
-            del self.cashbacks[timestamp] # remove action after completion
+        self._process_cashback(timestamp)
 
         # Returns None if account_id doesn't exist
         if account_id not in self.accounts_dict:
@@ -155,10 +148,28 @@ class BankingSystemImpl(BankingSystem):
         cashback = amount * 2 // 100
         cashback_timestamp = timestamp + 86400000
 
-        # Reserve for when cashback time comes
-        if cashback_timestamp not in self.cashbacks:
-            self.cashbacks[cashback_timestamp] = []
-        self.cashbacks[cashback_timestamp].append({"account_id": account_id, "cashback": cashback, "payment_num": payment})
+        if account_id not in self.payments:
+            self.payments[account_id] = {}
+
+        self.payments[account_id][payment] = {"cashback_timestamp": cashback_timestamp, "refunded": False, "cashback": cashback}
 
         return payment
+    
+
+    def get_payment_status(self, timestamp: int, account_id: str, payment: str) -> str | None:
+        self._process_cashback(timestamp)
+        
+        # Return None if account_id doesn't exist
+        if account_id not in self.accounts_dict:
+            return None
+
+        # Return None if account has no payments or payment not found
+        if account_id not in self.payments or payment not in self.payments[account_id]:
+            return None
+
+        # Return the status of the payment
+        if self.payments[account_id][payment]["refunded"]:
+            return "CASHBACK_RECEIVED"
+        else:
+            return "IN_PROGRESS"
 
