@@ -14,6 +14,9 @@ class BankingSystemImpl(BankingSystem):
     
     # Level 3
     def _process_cashback(self, timestamp: int):
+        """
+        Internal helper method to check all scheduled payments for cashback refund.
+        """
         for account_id in self.payments:
             for payment_id, record in self.payments[account_id].items():
                 if not record["refunded"] and timestamp >= record["cashback_timestamp"]:
