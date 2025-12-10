@@ -11,7 +11,18 @@ class BankingSystemImpl(BankingSystem):
         self.cashbacks = {} # added for level3 pay method
         self.withdrawals = 0 # added for level3 pay method
         self.payments = {} # added for level3 pay method
-
+        self.payment_counter = 1  # added for level 3 to generate payment1, payment2
+    
+    # Level 3
+    def _process_cashback(self, timestamp: int):
+        """
+        Internal helper method to check all scheduled payments for cashback refund.
+        """
+        for account_id in self.payments:
+            for payment in self.payments[account_id]:
+                if not payment["refunded"] and timestamp >= payment["scheduled_time"]:
+                    self.accounts_dict[account_id]["account balance"] += payment["cashback"]
+                    payment["refunded"] = True
 
     # TODO: implement interface methods here
 
