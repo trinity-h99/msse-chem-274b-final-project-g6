@@ -11,6 +11,7 @@ class BankingSystemImpl(BankingSystem):
         self.outgoing = {} # added for level2
         self.payments = {} # added for level3 pay method
         self.payment_counter = 1  # added for level 3 to generate payment1, payment2
+        self.aliases = {} # for level 4 merged account redirection
     
     # Level 4
     def _binary_search_record(self, balance_record: list[tuple[int, int]], time_at: int) -> int | None:
