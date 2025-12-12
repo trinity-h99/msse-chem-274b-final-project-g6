@@ -11,6 +11,7 @@ class BankingSystemImpl(BankingSystem):
         self.withdrawals = 0 # added for level3 pay method
         self.payments = {} # added for level3 pay method
         self.payment_counter = 1  # added for level 3 to generate payment1, payment2
+        self.aliases = {} # for level 4 merged account redirection
     
     # Level 3
     def _process_cashback(self, timestamp: int):
@@ -172,4 +173,46 @@ class BankingSystemImpl(BankingSystem):
             return "CASHBACK_RECEIVED"
         else:
             return "IN_PROGRESS"
+        
+    def merge_accounts(self, timestamp: int, account_id_1: str, account_id_2: str) -> bool:
+        #Prevent an account merging into itself
+        if account_id_1 == account_id_2:
+            return False
+        
+        # Follow alias chian if already merged
+        while account_id_1 in self.aliases:
+            account_id_1 = self.aliases[account_id_1]
+        while account_id_2 in self.aliases:
+            account_id_2 = self.aliases[account_id_2]
+        
+        # Check both accounts exist
+        if account_id_1 not in self.accounts_dict or account_id_2 not in self.accounts_dict:
+            return False
+        
+        # Add balances
+        self.accounts_dict[account_id_1]["account balance"] += self.accounts_dict[account_id_2]["account balance"]
+
+        # Add outgoing totals
+        outgoing_1 = self.outgoing.get(account_id_1, 0)
+        outgoing_2 = self.outgoing.get(account_id_2, 0)
+        self.outgoing[account_id_1] = outgoing_1 + outgoing_2
+        if account_id_2 in self.outgoing:
+            del self.outgoing[account_id_2]
+
+        # Move payment to account_id_1
+        if account_id_2 in self.payments:
+            if account_id_1 not in self.payments:
+                self.payments[account_id_1] = {}
+            self.payments[account_id_1].update(self.payments[account_id_2])
+            del self.payments[account_id_2]
+        # Set up alias for account_id_2 --> account_id_1
+        self.aliases[account_id_2] = account_id_1
+
+        # Removing account_id_3 from account_dict
+        del self.accounts_dict[account_id_2]
+
+        return True
+
+
+        
 
