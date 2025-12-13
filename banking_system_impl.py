@@ -4,6 +4,16 @@ from banking_system import BankingSystem
 class BankingSystemImpl(BankingSystem):
 
     def __init__(self):
+        """
+        Initialize all data structure for account storage and transaction tracking. 
+        - accounts_dict: Maps account_id to account info (timestamp, balance)
+        - record: Balance history per account for timestamp queries
+        - outgoing: Total outgoing transactions per account
+        - payments: Stores all payment transactions per account
+        - aliases: Account ID redirection for merged accounts
+        - merge_times: Records the timestamp at which an account was merged
+        - merged_history: Stores pre-merge balance history of merged accounts
+        """
         # TODO: implement
         self.accounts_dict = {}
         self.record = {} # added for level 4 to keep track of balance
